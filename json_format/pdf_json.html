@@ -1,0 +1,138 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Text Extraction</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+    <div class="col-lg-8">
+    <div class="card shadow">
+      <div class="card-header bg-dark text-white text-center">  
+     <h3 class="mb-0">PDF Text Extraction</h3>
+     </div>
+   <div class="card-body">
+            <p class="mb-3">Upload a PDF file to extract its text content.</p>
+
+            <input type="file" id="upload" accept="application/pdf" class="form-control mb-3" />
+
+            <button id="download" class="btn btn-success mb-3" style="display: none;">Download Extracted Text</button>
+
+            <h5 class="mt-4">Extracted Text:</h5>
+            <pre id="output" class="form-control" style="min-height: 200px; white-space: pre-wrap;"></pre>
+    </div>
+    </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    
+  document.getElementById('upload').addEventListener('change', async function (e) {
+    const file = e.target.files[0];
+    if (!file || file.type !== "application/pdf") {
+      alert("Please select a PDF file");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("http://localhost:5000/extract", {
+        method: "POST",
+        body: formData,
+      });
+      const result = await response.json();
+      console.log(result);       
+      document.getElementById('output').textContent = JSON.stringify(result, null, 2);
+    } catch (error) {
+      console.error("Error:", error);
+      document.getElementById('output').textContent = "Request failed: " + error.message;
+    }
+  });
+</script>
+</body>
+</html>
+ -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Text Extraction (JSON Format)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow">
+          <div class="card-header bg-dark text-white text-center">
+            <h3 class="mb-0">PDF Text Extraction - JSON Result</h3>
+          </div>
+          <div class="card-body">
+            <p class="mb-3">Upload a PDF file to extract and view its content in JSON format.</p>
+
+            <input type="file" id="upload" accept="application/pdf" class="form-control mb-3" />
+
+            <button id="download" class="btn btn-success mb-3" style="display: none;">Download JSON</button>
+
+            <h5 class="mt-4">Extracted JSON:</h5>
+            <pre id="output" class="form-control" style="min-height: 250px; white-space: pre-wrap;"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let extractedJson = null;
+
+    document.getElementById('upload').addEventListener('change', async function (e) {
+      const file = e.target.files[0];
+      if (!file || file.type !== "application/pdf") {
+        alert("Please select a PDF file.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("http://localhost:8000/extract", {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await response.json();
+        console.log(result);
+
+        if (result.pages) {
+          extractedJson = result;
+          document.getElementById('output').textContent = JSON.stringify(result, null, 2);
+          document.getElementById('download').style.display = 'inline-block';
+        } else {
+          document.getElementById('output').textContent = "Error: " + result.error;
+          document.getElementById('download').style.display = 'none';
+        }
+      } catch (error) {
+        document.getElementById('output').textContent = "Request failed: " + error.message;
+        document.getElementById('download').style.display = 'none';
+      }
+    });
+
+    document.getElementById('download').addEventListener('click', () => {
+      if (!extractedJson) return;
+
+      const blob = new Blob([JSON.stringify(extractedJson, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "extracted_text.json";
+      link.click();
+    });
+  </script>
+</body>
+</html>
